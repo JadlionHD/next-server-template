@@ -7,18 +7,19 @@ const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();
 
-const limiter = ratelimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 3, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false // Disable the `X-RateLimit-*` headers
-});
+const limiter = (ms: number, max = 20) =>
+  ratelimit({
+    windowMs: ms, // 15 minutes
+    max, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+    standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+    legacyHeaders: false // Disable the `X-RateLimit-*` headers
+  });
 
 app.prepare().then(() => {
   const server = express();
 
   // server.use(limiter);
-  server.get("/api/hello", limiter, (req, res) => {
+  server.get("/api/hello", limiter(15 * 60 * 1000), (req, res) => {
     res.json({ message: "Hello world" });
   });
 
